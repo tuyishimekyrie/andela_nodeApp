@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 const customerSchema = new mongoose.Schema({
   name: {
@@ -24,18 +24,21 @@ const Customer = mongoose.model("Customer", customerSchema);
 
 const zodSchema = z.object({
   name: z.string().min(5).max(50),
-  phone: z.string().min(5).max(50),
-  isGold: z.boolean(),
+  phone: z.string().min(5).max(50).optional(),
+  isGold: z.boolean().optional(),
 });
 
-// function validateCustomer(customer) {
-//   try {
-//     zodSchema.parse(customer); // Validate the customer
-//     return true; // Validation successful
-//   } catch (error) {
-//     console.error(error);
-//     return false; // Validation failed
-//   }
-// }
+export { Customer, zodSchema as customerZodSchema };
 
-export default Customer;
+export function validateCustomerInput(input: any) {
+  try {
+    zodSchema.parse(input);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      throw new Error(error.errors.map((e) => e.message).join(", "));
+    }
+    throw error;
+  }
+}
+
+// export { Customer, validateCustomerInput };

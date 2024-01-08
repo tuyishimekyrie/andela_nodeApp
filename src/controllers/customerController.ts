@@ -1,27 +1,46 @@
 import { Response, Request } from "express";
 import { customerDtos } from "../dtos/customer";
-import Customer from "../schemas/customersSchema";
+import { Customer } from "../schemas/customersSchema";
+import { body, validationResult } from "express-validator";
+
+export const validateCreateCustomer = [
+  body("name").isString().isLength({ min: 3, max: 50 }),
+  body("isGold").optional().isBoolean(),
+  body("phone").optional().isString().isLength({ min: 5, max: 50 }),
+];
 
 export const findCustomers = async (req: Request, res: Response) => {
   try {
-    const customer = await Customer.find();
+    const customer = await Customer.find().sort("name");
     res.status(200).json(customer);
   } catch (error) {
     res.status(500).send("Internal Server Error");
   }
 };
 export const createCustomer = async (req: Request, res: Response) => {
-  //   const { error } = req.body as customerDtos;
-  //   if (error) return res.status(400).send(error.details[0].message);
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const errorMessages = errors
+      .array()
+      .map((error: any) => `${error.param} is required`);
+    return res.status(400).json({ errors: errorMessages });
+  }
 
   let customer = new Customer({
     name: req.body.name,
     isGold: req.body.isGold,
     phone: req.body.phone,
   });
-  customer = await customer.save();
-
-  res.send(customer);
+  try {
+    customer = await customer.save();
+    res.status(201).send(customer);
+  } catch (error) {
+      // Handle database-related errors here
+      const errorsRunning = { error };
+      console.error("Error saving customer:", {error});
+      res.status(500).send(errorsRunning);
+  }
 };
 
 export const updateCustomer = async (req: Request, res: Response) => {
@@ -55,7 +74,7 @@ export const deleteCustomer = async (req: Request, res: Response) => {
       .send("The customer with the given ID was not found.");
 
   await customer.deleteOne();
-  res.send({data:true});
+  res.send({ data: true });
 };
 
 export const findOneCustomer = async (req: Request, res: Response) => {
@@ -68,3 +87,6 @@ export const findOneCustomer = async (req: Request, res: Response) => {
 
   res.send(customer);
 };
+function validateCustomerInput(body: any): { error: any } {
+  throw new Error("Function not implemented.");
+}

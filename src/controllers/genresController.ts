@@ -1,11 +1,28 @@
-import { Response, Request } from "express"; 
-import {genreDtos} from "../dtos/genre";
+import { Response, Request } from "express";
+import { genreDtos } from "../dtos/genre";
 import genres from "../schemas/genresSchema";
-
+import { validationResult } from "express-validator";
 
 export const findGenres = async (req: Request, res: Response) => {
   try {
     const genre = await genres.find();
+    res.status(200).json(genre);
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const findOneGenre = async (req: Request, res: Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  const { id } = req.params;
+  try {
+    const genre = await genres.findById(id);
+    if (!genre) {
+      return res.status(404).json({ error: "Genre not found" });
+    }
     res.status(200).json(genre);
   } catch (error) {
     res.status(500).send("Internal Server Error");
@@ -28,10 +45,8 @@ const saveGenreToDatabase = async (name: string) => {
     const genre = new genres({ name });
     const savedGenre = await genre.save();
     return savedGenre;
-  } catch (error:any) {
-    throw new Error(
-      `Error saving genre to the database:`
-    );
+  } catch (error: any) {
+    throw new Error(`Error saving genre to the database:`);
   }
 };
 export const updateGenre = async (req: Request, res: Response) => {
@@ -59,7 +74,6 @@ export const updateGenre = async (req: Request, res: Response) => {
   }
 };
 
-
 export const deleteGenre = async (req: Request, res: Response) => {
   const { id } = req.params;
 
@@ -73,7 +87,7 @@ export const deleteGenre = async (req: Request, res: Response) => {
     }
 
     // Remove the genre from the database
-      await foundGenre.deleteOne();
+    await foundGenre.deleteOne();
 
     res.status(200).json({ data: true });
   } catch (error) {
