@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 import {
   createGenre,
   deleteGenre,
@@ -9,10 +9,9 @@ import {
 const router = express.Router();
 
 router.get("/", findGenres);
-router.get("/:id",findOneGenre)
+router.get("/:id", findOneGenre);
 router.post("/", createGenre);
 router.patch("/:id", updateGenre);
 router.delete("/:id", deleteGenre);
-
 
 export default router;

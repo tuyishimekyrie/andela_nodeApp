@@ -18,7 +18,7 @@ export const findCustomers = async (req: Request, res: Response) => {
   }
 };
 export const createCustomer = async (req: Request, res: Response) => {
-  const errors = validationResult(req);
+    const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
     const errorMessages = errors
@@ -36,16 +36,22 @@ export const createCustomer = async (req: Request, res: Response) => {
     customer = await customer.save();
     res.status(201).send(customer);
   } catch (error) {
-      // Handle database-related errors here
-      const errorsRunning = { error };
-      console.error("Error saving customer:", {error});
-      res.status(500).send(errorsRunning);
+    // Handle database-related errors here
+    const errorsRunning = { error };
+    console.error("Error saving customer:", { error });
+    res.status(500).send(errorsRunning);
   }
 };
 
 export const updateCustomer = async (req: Request, res: Response) => {
-  //   const { error } = validate(req.body);
-  //   if (error) return res.status(400).send(error.details[0].message);
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const errorMessages = errors
+      .array()
+      .map((error: any) => `${error.param} is required`);
+    return res.status(400).json({ errors: errorMessages });
+  }
 
   const customer = await Customer.findByIdAndUpdate(
     req.params.id,
@@ -87,6 +93,4 @@ export const findOneCustomer = async (req: Request, res: Response) => {
 
   res.send(customer);
 };
-function validateCustomerInput(body: any): { error: any } {
-  throw new Error("Function not implemented.");
-}
+
